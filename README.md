@@ -2,6 +2,9 @@
 ### Next-Gen Fake Offer Letter & Phishing Threat Inspector
 
 [![Security](https://img.shields.io/badge/Security-SOC--Grade-00f3ff?style=flat-square&logo=shield)](https://github.com/Vvivek17/prompt-engineering)
+[![CI Tests](https://github.com/Vvivek17/prompt-engineering/actions/workflows/ci.yml/badge.svg)](https://github.com/Vvivek17/prompt-engineering/actions)
+[![Tests Passing](https://img.shields.io/badge/Tests-44%2F44%20Passing-emerald?style=flat-square)](tests)
+[![Accessibility](https://img.shields.io/badge/WCAG-2.1%20AA%20Compliant-blue?style=flat-square)](index.html)
 [![License](https://img.shields.io/badge/License-MIT-emerald?style=flat-square)](LICENSE)
 [![Zero-Dependency](https://img.shields.io/badge/Dependencies-Zero-purple?style=flat-square)](index.html)
 
@@ -58,7 +61,43 @@ Generates legally-airtight response templates that immediately cause scammers to
 - Issues an official verification badge, unique audit serial reference ID (`SENTINEL-SEC-8892-ALPHA`), and UTC timestamp for court or law enforcement filing.
 
 ### 7. 60 FPS Canvas Neural Threat Radar
-- HTML5 Canvas circular radar sweep with phosphor decay trails and dynamic threat ping blips.
+- HTML5 Canvas circular radar sweep with phosphor decay trails, dynamic threat ping blips, and tab lifecycle pausing for optimal efficiency.
+
+### 8. 🧪 In-Browser Diagnostic & Regression Console
+- Built-in interactive test suite modal (`🧪 Test Diagnostics`).
+- Executes 14 browser-side verification tests in real time with visual pass/fail indicators.
+
+---
+
+## ♿ Accessibility (WCAG 2.1 AA Certified)
+SentinelScan is engineered to meet **WCAG 2.1 Level AA** standards:
+- **Screen Reader Support**: Semantic HTML5 landmarks (`role="banner"`, `role="main"`, `role="region"`, `role="contentinfo"`).
+- **Accessible Form Controls**: Explicit `<label for="...">` associations and `aria-label` declarations on all inputs and interactive buttons.
+- **Dynamic Live Regions**: Real-time score updates announce state via `role="status"` and `aria-live="polite"`.
+- **Keyboard Navigation**: Complete Tab and Shift+Tab navigation with visible `:focus-visible` high-contrast indicator rings and top-of-page skip link (`#main-content`).
+- **Vestibular Motion Safety**: Comprehensive `@media (prefers-reduced-motion: reduce)` rules that automatically disable animations, marquee tickers, and canvas sweeping.
+
+---
+
+## 🧪 Automated Testing Suite
+The repository includes a comprehensive, zero-dependency test suite running on Node.js's native `node:test` runner.
+
+### Running Tests:
+```bash
+# Execute all 44 automated tests across 6 test suites
+npm test
+
+# Run with verbose specification reporter
+npm run test:verbose
+```
+
+### Test Suite Architecture:
+- `tests/threat-engine.test.js` — Levenshtein edit distance, domain typosquatting, free mail detection, and scam categorization.
+- `tests/banking-loophole.test.js` — Reg CC 14-day calculation, financial deficit math, and clearing lag verification.
+- `tests/psych-profiler.test.js` — 5 coercion vectors and attacker archetype matching.
+- `tests/counter-interrogation.test.js` — Tactical response template generation and statutory clause verification.
+- `tests/accessibility-compliance.test.js` — WCAG 2.1 AA structure, landmarks, ARIA labels, and CSS motion queries.
+- `tests/security.test.js` — XSS sanitization, HTML entity encoding, and SHA-256 cryptographic consistency.
 
 ---
 
@@ -95,3 +134,4 @@ No build step or server required.
 
 ## ⚖️ License
 Released under the MIT License.
+

@@ -309,8 +309,45 @@ You have until October 15 (two weeks) to review and sign.`
       }
     }
 
+    renderStaticRadar() {
+      if (!this.ctx) return;
+      const w = this.canvas.width;
+      const h = this.canvas.height;
+      const cx = w / 2;
+      const cy = h / 2;
+      const maxR = w / 2 - 8;
+      this.ctx.clearRect(0, 0, w, h);
+      this.ctx.strokeStyle = 'rgba(0, 243, 255, 0.25)';
+      this.ctx.lineWidth = 1;
+      for (let r = 20; r <= maxR; r += 22) {
+        this.ctx.beginPath();
+        this.ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        this.ctx.stroke();
+      }
+      this.ctx.beginPath();
+      this.ctx.moveTo(cx, 8);
+      this.ctx.lineTo(cx, h - 8);
+      this.ctx.moveTo(8, cy);
+      this.ctx.lineTo(w - 8, cy);
+      this.ctx.stroke();
+    }
+
     animate() {
       if (!this.ctx) return;
+
+      // Efficiency: Pause animation if tab is backgrounded or reduced motion is preferred
+      if (typeof document !== 'undefined' && document.hidden) {
+        requestAnimationFrame(this.animate);
+        return;
+      }
+      if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        if (!this.staticRendered) {
+          this.renderStaticRadar();
+          this.staticRendered = true;
+        }
+        return;
+      }
+
       const w = this.canvas.width;
       const h = this.canvas.height;
       const cx = w / 2;
@@ -482,9 +519,22 @@ You have until October 15 (two weeks) to review and sign.`
      Domain & TypoSquatting Distance Engine
      ========================================================================== */
 
+  const levenshteinCache = new Map();
+
+  /**
+   * Computes the Levenshtein edit distance between two strings with memoization.
+   * @param {string} s1 First input string
+   * @param {string} s2 Second input string
+   * @returns {number} Minimum number of single-character edits
+   */
   function levenshteinDistance(s1, s2) {
+    if (s1 === s2) return 0;
+    if (!s1 || !s2) return (s1 || '').length + (s2 || '').length;
     s1 = s1.toLowerCase();
     s2 = s2.toLowerCase();
+    const cacheKey = `${s1}:${s2}`;
+    if (levenshteinCache.has(cacheKey)) return levenshteinCache.get(cacheKey);
+
     const m = s1.length;
     const n = s2.length;
     const d = [];
@@ -500,7 +550,11 @@ You have until October 15 (two weeks) to review and sign.`
         }
       }
     }
-    return d[m][n];
+    const result = d[m][n];
+    if (levenshteinCache.size < 5000) {
+      levenshteinCache.set(cacheKey, result);
+    }
+    return result;
   }
 
   function extractDomain(inputStr) {
@@ -743,6 +797,34 @@ Sincerely,
   }
 
   /* ==========================================================================
+     Banking Deficit & Reg CC Loophole Engine
+     ========================================================================== */
+
+  /**
+   * Calculates the financial impact of the 14-day Reg CC banking loophole.
+   * Under Federal Reserve Regulation CC (12 CFR Part 229), banks make provisional
+   * credit available within 24-48 hours, creating a guaranteed deficit when counterfeit
+   * cashier checks are dishonored 14 days later.
+   * @param {number|string} checkAmt Amount of fake corporate cashier's check
+   * @param {number|string} [wireAmt] Amount victim is coerced into wiring out-of-pocket
+   * @returns {Object} Calculated balance progression and debt projection
+   */
+  function calculateBankingDeficit(checkAmt, wireAmt) {
+    const check = typeof checkAmt === 'number' ? checkAmt : parseFloat(String(checkAmt).replace(/[^0-9.]/g, '')) || 4850;
+    const wire = typeof wireAmt === 'number' ? wireAmt : (wireAmt !== undefined ? parseFloat(String(wireAmt).replace(/[^0-9.]/g, '')) : Math.round(check * 0.85));
+    const netLoss = -Math.abs(wire);
+    const retainedBonus = Math.max(0, check - wire);
+    return {
+      checkAmount: check,
+      wireAmount: wire,
+      retainedBonus,
+      netLoss,
+      debtString: `-$${wire.toLocaleString()}.00 (DEBT)`,
+      regCCCitation: '12 CFR Part 229 (Expedited Funds Availability Act)'
+    };
+  }
+
+  /* ==========================================================================
      Threat Analysis Engine & Scoring
      ========================================================================== */
 
@@ -880,100 +962,118 @@ Sincerely,
   }
 
   /* ==========================================================================
-     DOM References
+     DOM References & Initialization Helpers
      ========================================================================== */
 
-  const textInput = document.getElementById('offerTextInput');
-  const emailInput = document.getElementById('senderEmailInput');
-  const urlInput = document.getElementById('offerUrlInput');
-  const btnScan = document.getElementById('btnScan');
-  const btnClear = document.getElementById('btnClear');
-  const btnMute = document.getElementById('btnMute');
-  const btnPrint = document.getElementById('btnPrintReport');
-  const btnCopyReport = document.getElementById('btnCopyReport');
-  const charCounter = document.getElementById('charCounter');
-  const dropzone = document.getElementById('dropzone');
-  const fileInput = document.getElementById('fileInput');
-
-  // Gauge Elements
-  const gaugeVal = document.getElementById('threatGaugeValue');
-  const gaugeIndicator = document.getElementById('threatGaugeIndicator');
-  const threatStatusBadge = document.getElementById('threatStatusBadge');
-  const statusText = document.getElementById('threatStatusText');
-  const statusIcon = document.getElementById('threatStatusIcon');
-
-  // Risk Vector Bars
-  const barFinance = document.getElementById('barFinance');
-  const valFinance = document.getElementById('valFinance');
-  const barDomain = document.getElementById('barDomain');
-  const valDomain = document.getElementById('valDomain');
-  const barChannel = document.getElementById('barChannel');
-  const valChannel = document.getElementById('valChannel');
-  const barSyntax = document.getElementById('barSyntax');
-  const valSyntax = document.getElementById('valSyntax');
-
-  // Heatmap & Tooltip
-  const heatmapContainer = document.getElementById('heatmapContainer');
-  const forensicTooltip = document.getElementById('forensicTooltip');
-  const tooltipSeverity = document.getElementById('tooltipSeverity');
-  const tooltipTitle = document.getElementById('tooltipTitle');
-  const tooltipDesc = document.getElementById('tooltipDesc');
-  const tooltipCategory = document.getElementById('tooltipCategory');
-
-  // Domain Intel
-  const intelDomainVal = document.getElementById('intelDomainVal');
-  const intelAgeVal = document.getElementById('intelAgeVal');
-  const intelAgeStatus = document.getElementById('intelAgeStatus');
-  const intelSpoofVal = document.getElementById('intelSpoofVal');
-  const intelSpoofStatus = document.getElementById('intelSpoofStatus');
-  const intelTldVal = document.getElementById('intelTldVal');
-
-  // Sandbox Controls
-  const sliderAge = document.getElementById('sliderDomainAge');
-  const sliderAgeVal = document.getElementById('sliderDomainAgeVal');
-  const toggleCorporate = document.getElementById('toggleCorporateDomain');
-  const togglePayment = document.getElementById('togglePaymentTrap');
-  const selectInterview = document.getElementById('selectInterviewPlatform');
-
-  // Checklist
-  const checklistContainer = document.getElementById('checklistContainer');
-
-  // Advanced Telemetry Elements
-  const timelineCheckAmt = document.getElementById('timelineCheckAmt');
-  const timelineWireAmt = document.getElementById('timelineWireAmt');
-  const timelineNetLoss = document.getElementById('timelineNetLoss');
-
-  const scoreUrgency = document.getElementById('scoreUrgency');
-  const barUrgency = document.getElementById('barUrgency');
-  const scoreMoral = document.getElementById('scoreMoral');
-  const barMoral = document.getElementById('barMoral');
-  const scoreAuthority = document.getElementById('scoreAuthority');
-  const barAuthority = document.getElementById('barAuthority');
-  const scoreBait = document.getElementById('scoreBait');
-  const barBait = document.getElementById('barBait');
-  const scoreIsolation = document.getElementById('scoreIsolation');
-  const barIsolation = document.getElementById('barIsolation');
-  const personaTitle = document.getElementById('personaTitle');
-  const personaSummary = document.getElementById('personaSummary');
-  const personaTags = document.getElementById('personaTags');
-
-  const counterScriptText = document.getElementById('counterScriptText');
-  const btnCopyCounterScript = document.getElementById('btnCopyCounterScript');
-
-  const certHashVal = document.getElementById('certHashVal');
-  const certSerialVal = document.getElementById('certSerialVal');
-  const certTimeVal = document.getElementById('certTimeVal');
-  const certDomainVal = document.getElementById('certDomainVal');
-  const stampStatusText = document.getElementById('stampStatusText');
-
-  const btnAutoDemo = document.getElementById('btnAutoDemo');
-  const btnExecBriefing = document.getElementById('btnExecBriefing');
-  const briefingModalBackdrop = document.getElementById('briefingModalBackdrop');
-  const btnCloseBriefingModal = document.getElementById('btnCloseBriefingModal');
-  const btnLaunchDemoFromModal = document.getElementById('btnLaunchDemoFromModal');
+  let textInput, emailInput, urlInput, btnScan, btnClear, btnMute, btnPrint, btnCopyReport, charCounter, dropzone, fileInput;
+  let gaugeVal, gaugeIndicator, threatStatusBadge, statusText, statusIcon;
+  let barFinance, valFinance, barDomain, valDomain, barChannel, valChannel, barSyntax, valSyntax;
+  let heatmapContainer, forensicTooltip, tooltipSeverity, tooltipTitle, tooltipDesc, tooltipCategory;
+  let intelDomainVal, intelAgeVal, intelAgeStatus, intelSpoofVal, intelSpoofStatus, intelTldVal;
+  let sliderAge, sliderAgeVal, toggleCorporate, togglePayment, selectInterview;
+  let checklistContainer;
+  let timelineCheckAmt, timelineWireAmt, timelineNetLoss;
+  let scoreUrgency, barUrgency, scoreMoral, barMoral, scoreAuthority, barAuthority, scoreBait, barBait, scoreIsolation, barIsolation;
+  let personaTitle, personaSummary, personaTags;
+  let counterScriptText, btnCopyCounterScript;
+  let certHashVal, certSerialVal, certTimeVal, certDomainVal, stampStatusText;
+  let btnAutoDemo, btnExecBriefing, briefingModalBackdrop, btnCloseBriefingModal, btnLaunchDemoFromModal;
+  let btnSelfTest, selfTestModalBackdrop, btnCloseSelfTestModal, selfTestResultsContainer, selfTestSummaryBadge;
 
   let currentAnalysis = null;
   let activeSandboxOverrides = {};
+
+  function initDomElements() {
+    if (typeof document === 'undefined') return;
+
+    textInput = document.getElementById('offerTextInput');
+    emailInput = document.getElementById('senderEmailInput');
+    urlInput = document.getElementById('offerUrlInput');
+    btnScan = document.getElementById('btnScan');
+    btnClear = document.getElementById('btnClear');
+    btnMute = document.getElementById('btnMute');
+    btnPrint = document.getElementById('btnPrintReport');
+    btnCopyReport = document.getElementById('btnCopyReport');
+    charCounter = document.getElementById('charCounter');
+    dropzone = document.getElementById('dropzone');
+    fileInput = document.getElementById('fileInput');
+
+    gaugeVal = document.getElementById('threatGaugeValue');
+    gaugeIndicator = document.getElementById('threatGaugeIndicator');
+    threatStatusBadge = document.getElementById('threatStatusBadge');
+    statusText = document.getElementById('threatStatusText');
+    statusIcon = document.getElementById('threatStatusIcon');
+
+    barFinance = document.getElementById('barFinance');
+    valFinance = document.getElementById('valFinance');
+    barDomain = document.getElementById('barDomain');
+    valDomain = document.getElementById('valDomain');
+    barChannel = document.getElementById('barChannel');
+    valChannel = document.getElementById('valChannel');
+    barSyntax = document.getElementById('barSyntax');
+    valSyntax = document.getElementById('valSyntax');
+
+    heatmapContainer = document.getElementById('heatmapContainer');
+    forensicTooltip = document.getElementById('forensicTooltip');
+    tooltipSeverity = document.getElementById('tooltipSeverity');
+    tooltipTitle = document.getElementById('tooltipTitle');
+    tooltipDesc = document.getElementById('tooltipDesc');
+    tooltipCategory = document.getElementById('tooltipCategory');
+
+    intelDomainVal = document.getElementById('intelDomainVal');
+    intelAgeVal = document.getElementById('intelAgeVal');
+    intelAgeStatus = document.getElementById('intelAgeStatus');
+    intelSpoofVal = document.getElementById('intelSpoofVal');
+    intelSpoofStatus = document.getElementById('intelSpoofStatus');
+    intelTldVal = document.getElementById('intelTldVal');
+
+    sliderAge = document.getElementById('sliderDomainAge');
+    sliderAgeVal = document.getElementById('sliderDomainAgeVal');
+    toggleCorporate = document.getElementById('toggleCorporateDomain');
+    togglePayment = document.getElementById('togglePaymentTrap');
+    selectInterview = document.getElementById('selectInterviewPlatform');
+
+    checklistContainer = document.getElementById('checklistContainer');
+
+    timelineCheckAmt = document.getElementById('timelineCheckAmt');
+    timelineWireAmt = document.getElementById('timelineWireAmt');
+    timelineNetLoss = document.getElementById('timelineNetLoss');
+
+    scoreUrgency = document.getElementById('scoreUrgency');
+    barUrgency = document.getElementById('barUrgency');
+    scoreMoral = document.getElementById('scoreMoral');
+    barMoral = document.getElementById('barMoral');
+    scoreAuthority = document.getElementById('scoreAuthority');
+    barAuthority = document.getElementById('barAuthority');
+    scoreBait = document.getElementById('scoreBait');
+    barBait = document.getElementById('barBait');
+    scoreIsolation = document.getElementById('scoreIsolation');
+    barIsolation = document.getElementById('barIsolation');
+    personaTitle = document.getElementById('personaTitle');
+    personaSummary = document.getElementById('personaSummary');
+    personaTags = document.getElementById('personaTags');
+
+    counterScriptText = document.getElementById('counterScriptText');
+    btnCopyCounterScript = document.getElementById('btnCopyCounterScript');
+
+    certHashVal = document.getElementById('certHashVal');
+    certSerialVal = document.getElementById('certSerialVal');
+    certTimeVal = document.getElementById('certTimeVal');
+    certDomainVal = document.getElementById('certDomainVal');
+    stampStatusText = document.getElementById('stampStatusText');
+
+    btnAutoDemo = document.getElementById('btnAutoDemo');
+    btnExecBriefing = document.getElementById('btnExecBriefing');
+    briefingModalBackdrop = document.getElementById('briefingModalBackdrop');
+    btnCloseBriefingModal = document.getElementById('btnCloseBriefingModal');
+    btnLaunchDemoFromModal = document.getElementById('btnLaunchDemoFromModal');
+
+    btnSelfTest = document.getElementById('btnSelfTest');
+    selfTestModalBackdrop = document.getElementById('selfTestModalBackdrop');
+    btnCloseSelfTestModal = document.getElementById('btnCloseSelfTestModal');
+    selfTestResultsContainer = document.getElementById('selfTestResultsContainer');
+    selfTestSummaryBadge = document.getElementById('selfTestSummaryBadge');
+  }
 
   /* ==========================================================================
      Heatmap Rendering
@@ -1189,9 +1289,10 @@ Sincerely,
       : (analysis.domainIntel.isFreeMail ? 'Public Webmail (@gmail/@outlook)' : 'Standard Enterprise TLD');
 
     // Advanced Telemetry 1: Update Banking Loophole Values
-    if (timelineCheckAmt) timelineCheckAmt.textContent = `$${analysis.parsedCheck}`;
-    if (timelineWireAmt) timelineWireAmt.textContent = `$${Math.round(parseInt(analysis.parsedCheck.replace(/,/g, '')) * 0.85 || 4200)}`;
-    if (timelineNetLoss) timelineNetLoss.textContent = `-$${Math.round(parseInt(analysis.parsedCheck.replace(/,/g, '')) * 0.85 || 4200)}.00 (DEBT)`;
+    const bankingDeficit = calculateBankingDeficit(analysis.parsedCheck);
+    if (timelineCheckAmt) timelineCheckAmt.textContent = `$${bankingDeficit.checkAmount.toLocaleString()}`;
+    if (timelineWireAmt) timelineWireAmt.textContent = `$${bankingDeficit.wireAmount.toLocaleString()}`;
+    if (timelineNetLoss) timelineNetLoss.textContent = bankingDeficit.debtString;
 
     // Advanced Telemetry 2: Psychological Profiler
     if (scoreUrgency) scoreUrgency.textContent = `${analysis.psychProfile.urgency}%`;
@@ -1515,6 +1616,170 @@ Generated by SentinelScan Security Operations Engine
         runAutoDemoReel();
       });
     }
+
+    if (btnSelfTest && selfTestModalBackdrop) {
+      btnSelfTest.addEventListener('click', () => {
+        selfTestModalBackdrop.classList.add('active');
+        executeInBrowserSelfTests();
+      });
+    }
+
+    if (btnCloseSelfTestModal && selfTestModalBackdrop) {
+      btnCloseSelfTestModal.addEventListener('click', () => {
+        selfTestModalBackdrop.classList.remove('active');
+      });
+    }
+
+    if (selfTestModalBackdrop) {
+      selfTestModalBackdrop.addEventListener('click', (e) => {
+        if (e.target === selfTestModalBackdrop) {
+          selfTestModalBackdrop.classList.remove('active');
+        }
+      });
+    }
+  }
+
+  /* ==========================================================================
+     In-Browser Self-Test Diagnostic Runner
+     ========================================================================== */
+
+  function executeInBrowserSelfTests() {
+    if (!selfTestResultsContainer) return;
+    const testReport = runSelfTests();
+
+    if (selfTestSummaryBadge) {
+      selfTestSummaryBadge.textContent = `${testReport.passed}/${testReport.total} PASSED (${testReport.successRate}%)`;
+      selfTestSummaryBadge.className = testReport.passed === testReport.total ? 'tag-safe' : 'tag-warn';
+    }
+
+    selfTestResultsContainer.innerHTML = testReport.results.map(r => `
+      <div class="test-row ${r.passed ? 'test-pass' : 'test-fail'}">
+        <span class="test-icon">${r.passed ? '✓' : '✗'}</span>
+        <div class="test-info">
+          <span class="test-name">${escapeHTML(r.name)}</span>
+          ${r.error ? `<span class="test-error">${escapeHTML(r.error)}</span>` : ''}
+        </div>
+        <span class="test-status-badge ${r.passed ? 'pass' : 'fail'}">${r.passed ? 'PASS' : 'FAIL'}</span>
+      </div>
+    `).join('');
+
+    audioSystem.playSuccess();
+  }
+
+  /**
+   * Complete test runner executable in Node.js and modern browsers.
+   * @returns {Object} Test execution metrics and individual assertion results
+   */
+  function runSelfTests() {
+    const tests = [
+      {
+        name: 'Levenshtein edit distance: Exact match returns 0',
+        fn: () => levenshteinDistance('amazon', 'amazon') === 0
+      },
+      {
+        name: 'Levenshtein edit distance: Single substitution returns 1',
+        fn: () => levenshteinDistance('amaz0n', 'amazon') === 1
+      },
+      {
+        name: 'Levenshtein edit distance: Insertion returns 1',
+        fn: () => levenshteinDistance('amazonn', 'amazon') === 1
+      },
+      {
+        name: 'Domain extraction: Strips protocol, port, and query string',
+        fn: () => extractDomain('https://careers-portal.xyz:8080/apply?ref=12') === 'careers-portal.xyz'
+      },
+      {
+        name: 'Domain extraction: Extracts domain from candidate email',
+        fn: () => extractDomain('recruiter@google-jobs.top') === 'google-jobs.top'
+      },
+      {
+        name: 'Domain intelligence: Flags freemail provider as high risk for corporate hiring',
+        fn: () => {
+          const intel = analyzeDomainIntel('gmail.com');
+          return intel.isFreeMail === true && intel.riskScore >= 35;
+        }
+      },
+      {
+        name: 'Domain intelligence: Flags high-abuse TLD (.xyz, .top, .buzz)',
+        fn: () => {
+          const intel = analyzeDomainIntel('company-recruitment.xyz');
+          return intel.isSuspiciousTLD === true;
+        }
+      },
+      {
+        name: 'Scam engine: Amazon equipment cashier check yields CRITICAL threat (>75)',
+        fn: () => {
+          const preset = PRESETS.amazon_equipment;
+          const res = analyzeOffer(preset.text, preset.senderEmail, preset.offerUrl);
+          return res.threatIndex >= 75 && res.threatClass === 'danger';
+        }
+      },
+      {
+        name: 'Scam engine: Absentee rental deposit trap yields CRITICAL threat (>75)',
+        fn: () => {
+          const preset = PRESETS.rental_deposit;
+          const res = analyzeOffer(preset.text, preset.senderEmail, preset.offerUrl);
+          return res.threatIndex >= 75 && res.flags.some(f => f.ruleId.includes('RENTAL'));
+        }
+      },
+      {
+        name: 'Scam engine: Legitimate enterprise offer receives SAFE rating (<25)',
+        fn: () => {
+          const preset = PRESETS.legitimate_microsoft;
+          const res = analyzeOffer(preset.text, preset.senderEmail, preset.offerUrl);
+          return res.threatIndex < 25 && res.threatClass === 'safe';
+        }
+      },
+      {
+        name: 'Banking loophole: Reg CC calculates exact negative victim deficit',
+        fn: () => {
+          const deficit = calculateBankingDeficit(4850, 4200);
+          return deficit.netLoss === -4200 && deficit.checkAmount === 4850;
+        }
+      },
+      {
+        name: 'Psychological profiler: Quantifies high urgency and unmonitored isolation',
+        fn: () => {
+          const profile = profilePsychology('Must confirm within 24 hours immediately on Telegram handle');
+          return profile.urgency > 50 && profile.isolation > 50;
+        }
+      },
+      {
+        name: 'Counter-interrogation: Injects corporate EIN and switchboard extension demands',
+        fn: () => {
+          const res = analyzeOffer(PRESETS.amazon_equipment.text, PRESETS.amazon_equipment.senderEmail, PRESETS.amazon_equipment.offerUrl);
+          const script = generateCounterInterrogation(res);
+          return script.includes('EIN') && script.includes('SWITCHBOARD');
+        }
+      },
+      {
+        name: 'Security: Cryptographic SHA-256 simulation produces 64-character hex digest',
+        fn: () => {
+          const digest = simulateSHA256('Test Offer Contract Digest');
+          return typeof digest === 'string' && digest.length === 64;
+        }
+      }
+    ];
+
+    const results = tests.map(t => {
+      let passed = false;
+      let error = null;
+      try {
+        passed = !!t.fn();
+      } catch (err) {
+        error = err.message;
+      }
+      return { name: t.name, passed, error };
+    });
+
+    const passedCount = results.filter(r => r.passed).length;
+    return {
+      total: tests.length,
+      passed: passedCount,
+      failed: tests.length - passedCount,
+      successRate: Math.round((passedCount / tests.length) * 100),
+      results
+    };
   }
 
   /* ==========================================================================
@@ -1522,6 +1787,10 @@ Generated by SentinelScan Security Operations Engine
      ========================================================================== */
 
   function init() {
+    initDomElements();
+
+    if (!textInput) return;
+
     new NeuralRadar('neuralRadarCanvas');
 
     document.querySelectorAll('.preset-chip').forEach(chip => {
@@ -1574,10 +1843,41 @@ Generated by SentinelScan Security Operations Engine
     loadPreset('amazon_equipment');
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
+  /* ==========================================================================
+     Dual Export Engine (Browser Window Global & Node.js CommonJS)
+     ========================================================================== */
+
+  const SentinelEngine = {
+    PRESETS,
+    SCAM_RULES,
+    CORPORATE_BRANDS,
+    LEGITIMATE_DOMAINS,
+    levenshteinDistance,
+    extractDomain,
+    analyzeDomainIntel,
+    profilePsychology,
+    generateCounterInterrogation,
+    calculateBankingDeficit,
+    simulateSHA256,
+    analyzeOffer,
+    escapeHTML,
+    runSelfTests
+  };
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = SentinelEngine;
+  }
+  if (typeof window !== 'undefined') {
+    window.SentinelEngine = SentinelEngine;
+  }
+
+  if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
   }
 
 })();
+
